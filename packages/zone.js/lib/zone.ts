@@ -956,6 +956,14 @@ const Zone: ZoneType = (function(global: any) {
         throw new Error(
             'A task can only be cancelled in the zone of creation! (Creation: ' +
             (task.zone || NO_ZONE).name + '; Execution: ' + this.name + ')');
+      
+      // Sometimes a task will cancel in notScheduled(canceled) state, we should not try to
+      // cancel the task but just return. 
+
+      if (task.state === notScheduled && (task.type === eventTask || task.type === macroTask)) {
+        return;
+      }
+      
       (task as ZoneTask<any>)._transitionTo(canceling, scheduled, running);
       try {
         this._zoneDelegate.cancelTask(this, task);
